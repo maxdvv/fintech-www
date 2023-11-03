@@ -31,7 +31,7 @@ export class AuthService {
     return user;
   }
 
-  async login(loginDto: LoginDto): Promise<User> {
+  async login(session, loginDto: LoginDto): Promise<User> {
     const { username, password } = loginDto;
     const user = await this.userModel.findOne({ username });
 
@@ -41,13 +41,25 @@ export class AuthService {
 
     const isPasswordMatched = await bcrypt.compare(password, user.password);
 
-    if (!isPasswordMatched) {
+    if (isPasswordMatched) {
+      session.user = user.username;
+      session.autorized = true;
+    } else {
       throw new UnauthorizedException('Invalid password');
     }
 
     return user;
   }
 
+  async findUserById(id: string): Promise<User> {
+    const user = await this.userModel.findOne({ _id: id });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    return user;
+  }
 
   async validateUser(username: string, password: string): Promise<boolean> {
     const user = await this.userModel.findOne({ username });

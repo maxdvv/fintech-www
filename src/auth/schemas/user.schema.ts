@@ -19,7 +19,7 @@ export class User {
   @Prop()
   isInvited: boolean;
 
-  @Prop({ unique: true })
+  @Prop()
   invitationCode: string;
 }
 
