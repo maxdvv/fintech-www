@@ -1,4 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { UserRole } from "../role.enum";
 
 @Schema({
   timestamps: true
@@ -19,7 +20,10 @@ export class User {
   @Prop()
   isInvited: boolean;
 
-  @Prop()
+  @Prop({ enum: UserRole, default: UserRole.USER })
+  role: string
+
+  @Prop({ unique: false })
   invitationCode: string;
 }
 

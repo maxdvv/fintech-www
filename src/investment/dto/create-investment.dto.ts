@@ -6,10 +6,10 @@ export class createInvestmentDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
-  readonly amount:number;
+  readonly amount: number;
 
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  readonly userId:string;
+  readonly userId: string;
 }

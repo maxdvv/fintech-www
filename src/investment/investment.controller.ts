@@ -4,19 +4,18 @@ import { Investment } from "./schemas/investment.schema";
 import { createInvestmentDto } from "./dto/create-investment.dto";
 import { LocalAuthGuard } from "../auth/local.auth.guard";
 import { ApiBody, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { RolesGuard } from "../auth/role.guard";
+import { UserRole } from "../auth/role.enum";
+import { Roles } from "../common/decorators/roles.decorator";
 
 @ApiTags('investment')
 @Controller('investment')
 export class InvestmentController {
   constructor(private investmentService: InvestmentService) {}
 
-  @Post('test')
-  @UseGuards(LocalAuthGuard)
-  async createInvestmentTest(@Body() investment: createInvestmentDto): Promise<Investment> {
-    return investment;
-  }
-
   @Post('add')
+  @Roles(UserRole.USER, UserRole.INVESTOR)
+  @UseGuards(RolesGuard)
   @UsePipes(new ValidationPipe())
   @UseGuards(LocalAuthGuard)
   @ApiBody({ type: createInvestmentDto })

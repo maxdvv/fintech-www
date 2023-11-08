@@ -4,6 +4,7 @@ import { User } from "./schemas/user.schema";
 import { Model } from "mongoose";
 import * as bcrypt from 'bcrypt'
 import { LoginDto } from "./dto/login.dto";
+import { UserRole } from "./role.enum";
 
 @Injectable()
 export class AuthService {
@@ -15,12 +16,15 @@ export class AuthService {
     const { username, password, email } = signUpDto;
     const invitationCode = signUpDto?.invitationCode;
     const hashedPassword = await bcrypt.hash(password, 11);
+    const isAdminExist = !!(await this.userModel.findOne({ isAdmin: true }));
+
     const user = await this.userModel.create({
       username,
       password: hashedPassword,
       email,
-      isAdmin: false,
+      isAdmin: !isAdminExist,
       isInvited: !!invitationCode,
+      role: isAdminExist ? UserRole.USER : UserRole.ADMIN,
       invitationCode
     });
 
@@ -43,6 +47,7 @@ export class AuthService {
 
     if (isPasswordMatched) {
       session.user = user.username;
+      session.role = user.role;
       session.autorized = true;
     } else {
       throw new UnauthorizedException('Invalid password');

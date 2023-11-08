@@ -18,7 +18,10 @@ export class SignUpDto {
   @IsEmail({}, { message: 'Please enter correct email' })
   readonly email: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty()
+  readonly role: string;
+
+  @ApiProperty({ required: false, uniqueItems: false })
   @IsString()
   @IsOptional()
   readonly invitationCode: string;
