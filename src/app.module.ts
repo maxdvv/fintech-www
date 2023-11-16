@@ -6,6 +6,7 @@ import { AuthModule } from "./auth/auth.module";
 import { InvestmentModule } from './investment/investment.module';
 import { ConfigModule } from "@nestjs/config";
 import { InvitationCodesModule } from './invitation-codes/invitation-codes.module';
+import { WithdrawalsModule } from './withdrawals/withdrawals.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { InvitationCodesModule } from './invitation-codes/invitation-codes.modul
     AuthModule,
     InvestmentModule,
     InvitationCodesModule,
+    WithdrawalsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

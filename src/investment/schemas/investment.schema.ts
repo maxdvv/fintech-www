@@ -5,10 +5,28 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 })
 export class Investment {
   @Prop()
-  amount: number;
+  userId: string;
 
   @Prop()
-  userId: string;
+  createdAt: Date;
+
+  @Prop()
+  updatedAt: Date;
+
+  @Prop()
+  deposit: number;
+
+  @Prop()
+  profit: number;
+
+  @Prop()
+  bonus: number;
+
+  @Prop()
+  availableProfit: number;
+
+  @Prop()
+  availableBonus: number;
 }
 
 export const investmentSchema = SchemaFactory.createForClass(Investment);

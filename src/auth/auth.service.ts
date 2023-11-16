@@ -5,6 +5,7 @@ import { Model } from "mongoose";
 import * as bcrypt from 'bcrypt'
 import { LoginDto } from "./dto/login.dto";
 import { UserRole } from "./role.enum";
+import { SignUpDto } from "./dto/signup.dto";
 
 @Injectable()
 export class AuthService {
@@ -12,7 +13,7 @@ export class AuthService {
     @InjectModel(User.name) private userModel: Model<User>
   ) {}
 
-  async signUp(signUpDto): Promise<User> {
+  async signUp(signUpDto: SignUpDto): Promise<User> {
     const { username, password, email } = signUpDto;
     const invitationCode = signUpDto?.invitationCode;
     const hashedPassword = await bcrypt.hash(password, 11);

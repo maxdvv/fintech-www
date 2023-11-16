@@ -23,6 +23,20 @@ export class InvestmentController {
     return this.investmentService.create(investment);
   }
 
+  @Get()
+  @Roles(UserRole.ADMIN)
+  @UseGuards(RolesGuard)
+  @UseGuards(LocalAuthGuard)
+  @ApiResponse({ status: 200, type: Number })
+  async getAllInvestment(): Promise<number> {
+    return this.investmentService.findSumAllInvestment();
+  }
+
+  @Get('bonus')
+  async calcBonus(): Promise<any> {
+    return this.investmentService.calculateBonusGrowth();
+  }
+
   @Get(':id')
   @UseGuards(LocalAuthGuard)
   @ApiResponse({ status: 200, type: createInvestmentDto })

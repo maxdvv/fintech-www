@@ -1,14 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { User } from "../auth/schemas/user.schema";
 import { InvitationCodes } from "./schemas/invitation-codes.schema";
 import { generateInvitationCode } from "../common/functions/generate-invitation-code";
 
 @Injectable()
 export class InvitationCodesService {
   constructor(
-    @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(InvitationCodes.name) private invitationCodesModel: Model<InvitationCodes>
   ) {}
 

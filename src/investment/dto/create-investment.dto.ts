@@ -5,11 +5,11 @@ import { ApiProperty } from "@nestjs/swagger";
 export class createInvestmentDto {
   @ApiProperty()
   @IsNotEmpty()
-  @IsNumber()
-  readonly amount: number;
+  @IsString()
+  readonly userId: string;
 
   @ApiProperty()
   @IsNotEmpty()
-  @IsString()
-  readonly userId: string;
+  @IsNumber()
+  readonly deposit: number;
 }
