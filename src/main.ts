@@ -9,7 +9,7 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.use(express.static(path.join(__dirname, '../fintech-www-client/src', 'index.html')));
+  app.use(express.static(path.join(__dirname, '../client/src', 'index.html')));
 
   const config = new DocumentBuilder()
     .setTitle('Fintech-www')
