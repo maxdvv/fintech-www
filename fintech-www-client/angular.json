@@ -72,10 +72,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "fintech-www-client:build:production"
+              "buildTarget": "fintech-www-client:build:production"
             },
             "development": {
-              "browserTarget": "fintech-www-client:build:development"
+              "buildTarget": "fintech-www-client:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -83,7 +83,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "fintech-www-client:build"
+            "buildTarget": "fintech-www-client:build"
           }
         },
         "test": {
@@ -107,7 +107,6 @@
       }
     }
   },
-  "defaultProject": "fintech-www-client",
   "cli": {
     "analytics": false
   }
