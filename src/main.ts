@@ -2,10 +2,14 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as session from 'express-session';
 import * as passport from 'passport';
+import * as express from 'express';
+import * as path from 'path';
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.use(express.static(path.join(__dirname, '../fintech-www-client/src', 'index.html')));
 
   const config = new DocumentBuilder()
     .setTitle('Fintech-www')
