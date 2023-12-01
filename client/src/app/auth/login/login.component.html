@@ -3,12 +3,9 @@
     <form class="login-form">
       <div class="company">Fintech WWW</div>
       <mat-form-field class="input-container">
-        <mat-label>Email</mat-label>
-        <input type="email" matInput [formControl]="emailFormControl" [errorStateMatcher]="matcher">
-        @if (emailFormControl.hasError('email') && !emailFormControl.hasError('required')) {
-        <mat-error>Please enter a valid email address</mat-error>
-        }
-        @if (emailFormControl.hasError('required')) {
+        <mat-label>User name</mat-label>
+        <input type="email" matInput [formControl]="userNameFormControl" [errorStateMatcher]="matcher">
+        @if (userNameFormControl.hasError('required')) {
         <mat-error>Email is <strong>required</strong></mat-error>
         }
       </mat-form-field>
@@ -30,13 +27,19 @@
         }
       </mat-form-field>
 
-      <button mat-raised-button color="primary" class="container-login-btn" (click)="login()">Login</button>
+      <button
+        mat-raised-button
+        color="primary"
+        class="container-login-btn"
+        [disabled]="userNameFormControl.hasError('required') || passwordFormControl.hasError('required')"
+        (click)="login()"
+      >Login</button>
 
       <div class="signup-container">
         <span class="txt1">
           Don’t have an account?
         </span>
-        <a class="txt2" href="#">
+        <a class="txt2" [routerLink]="'/sign-up'" [routerLinkActive]="'active'">
           Sign Up
         </a>
       </div>

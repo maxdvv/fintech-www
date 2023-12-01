@@ -6,6 +6,8 @@ import {
   Validators
 } from '@angular/forms';
 import { ErrorStateMatcher } from '@angular/material/core';
+import { AuthService } from "../auth.service";
+import { Subject, takeUntil } from "rxjs";
 
 export class MyErrorStateMatcher implements ErrorStateMatcher {
   isErrorState(control: FormControl | null, form: FormGroupDirective | NgForm | null): boolean {
@@ -20,14 +22,29 @@ export class MyErrorStateMatcher implements ErrorStateMatcher {
   styleUrl: './login.component.scss'
 })
 export class LoginComponent {
-  emailFormControl = new FormControl('', [Validators.required, Validators.email]);
+  userNameFormControl = new FormControl('', [Validators.required]);
   passwordFormControl = new FormControl('', [Validators.required]);
   matcher = new MyErrorStateMatcher();
 
   hidePassword = true;
+  private unsubscribe$ = new Subject();
+
+  constructor(private authService: AuthService) {
+  }
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next(0);
+    this.unsubscribe$.complete();
+  }
 
   login(): void {
-    const email = this.emailFormControl.value;
-    const password = this.passwordFormControl.value;
+    const username: string = <string>this.userNameFormControl.value;
+    const password: string = <string>this.passwordFormControl.value;
+
+    this.authService.login(username, password).pipe(
+      takeUntil(this.unsubscribe$)
+    ).subscribe(res => {
+      console.log('res', res)
+    })
   }
 }

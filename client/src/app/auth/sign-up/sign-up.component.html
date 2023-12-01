@@ -1,0 +1,93 @@
+<div class="container-sign-up">
+  <div class="wrap-sign-up">
+    <form class="sign-up-form" [formGroup]="form" >
+      <div class="company">Fintech WWW</div>
+
+      <mat-form-field class="input-container">
+        <mat-label>User name</mat-label>
+        <input type="email" matInput id="user-name" formControlName="userName">
+        @if (form.get('userName')?.hasError('required')) {
+        <mat-error>User name is <strong>required</strong></mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field class="input-container">
+        <mat-label>Enter your password</mat-label>
+        <input matInput id="password" formControlName="password" [type]="hidePassword ? 'password' : 'text'">
+        <button
+          mat-icon-button
+          matSuffix
+          (click)="hidePassword = !hidePassword"
+          [attr.aria-label]="'Hide password'"
+          [attr.aria-pressed]="hidePassword"
+        >
+          <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+        </button>
+        @if (form.get('password')?.hasError('required')) {
+        <mat-error>Password is <strong>required</strong></mat-error>
+        }
+        @if (form.get('password')?.invalid && !form.get('password')?.hasError('required')) {
+        <mat-error class="validation-error">Password must be at least 8 characters long</mat-error>
+        }
+      </mat-form-field>
+
+      @if (mismatchPassword) {
+      <mat-error>Mismatch password. Check please!</mat-error>
+      }
+
+      <mat-form-field class="input-container">
+        <mat-label>Repeat your password</mat-label>
+        <input matInput id="repeat-password" formControlName="repeatPassword" [type]="hideRepeatedPassword ? 'password' : 'text'">
+        <button
+          mat-icon-button
+          matSuffix
+          (click)="hideRepeatedPassword = !hideRepeatedPassword"
+          [attr.aria-label]="'Hide password'"
+          [attr.aria-pressed]="hideRepeatedPassword"
+        >
+          <mat-icon>{{hideRepeatedPassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+        </button>
+        @if (form.get('repeatPassword')?.hasError('required')) {
+        <mat-error>Password is <strong>required</strong></mat-error>
+        }
+        @if (form.get('repeatPassword')?.invalid && !form.get('repeatPassword')?.hasError('required')) {
+        <mat-error>Password must be at least 8 characters long</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field class="input-container">
+        <mat-label>Email</mat-label>
+        <input type="email" matInput id="email" formControlName="email">
+        @if (form.get('email')?.hasError('email') && !form.get('email')?.hasError('required')) {
+        <mat-error>Please enter a valid email address</mat-error>
+        }
+        @if (form.get('email')?.hasError('required')) {
+        <mat-error>Email is <strong>required</strong></mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field class="input-container">
+        <mat-label>Invitation code</mat-label>
+        <input type="text" matInput id="invitationCode" formControlName="invitationCode">
+      </mat-form-field>
+
+      <button
+        mat-raised-button
+        color="primary"
+        class="sign-up-btn"
+        (click)="signUp()"
+        [disabled]="form.invalid"
+      >Sign Up</button>
+
+      <div class="signup-container">
+        <span class="txt1">
+          I'm already have an account?
+        </span>
+        <a class="txt2" [routerLink]="'/login'" [routerLinkActive]="'active'">
+          Login
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+

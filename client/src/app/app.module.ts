@@ -1,11 +1,14 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { AuthModule } from "./auth/auth.module";
 import { MatButtonModule } from "@angular/material/button";
+import { HTTP_INTERCEPTORS } from "@angular/common/http";
+import { BaseUrlInterceptor } from "./interceptors/base-url.interceptor";
+import { provideToastr, ToastrModule } from "ngx-toastr";
 
 @NgModule({
   declarations: [
@@ -16,9 +19,26 @@ import { MatButtonModule } from "@angular/material/button";
     AuthModule,
     AppRoutingModule,
     BrowserAnimationsModule,
-    MatButtonModule
+    MatButtonModule,
+    ToastrModule.forRoot({
+      closeButton: true,
+      positionClass: 'toast-top-left',
+      preventDuplicates: true,
+      iconClasses: {
+        error: 'mdi mdi-24px mdi-alert',
+        info: 'mdi mdi-24px mdi-alert-circle-outline',
+        success: 'mdi mdi-24px mdi-check-circle',
+        warning: 'mdi mdi-24px mdi-shield-alert-outline',
+      },
+    }),
   ],
-  providers: [],
+  providers: [
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: BaseUrlInterceptor,
+      multi: true,
+    }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

@@ -7,10 +7,13 @@ import { MatInputModule } from "@angular/material/input";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatButtonModule } from "@angular/material/button";
 import { MatIconModule } from "@angular/material/icon";
+import { SignUpComponent } from "./sign-up/sign-up.component";
+import { RouterModule } from "@angular/router";
 
 @NgModule({
   declarations: [
-    LoginComponent
+    LoginComponent,
+    SignUpComponent
   ],
   imports: [
     CommonModule,
@@ -20,10 +23,13 @@ import { MatIconModule } from "@angular/material/icon";
     MatInputModule,
     MatFormFieldModule,
     MatButtonModule,
-    MatIconModule
+    MatIconModule,
+    RouterModule
   ],
   exports: [
-    LoginComponent
+    LoginComponent,
+    SignUpComponent,
+    RouterModule
   ]
 })
 export class AuthModule { }
