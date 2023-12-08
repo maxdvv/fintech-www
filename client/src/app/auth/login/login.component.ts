@@ -7,7 +7,9 @@ import {
 } from '@angular/forms';
 import { ErrorStateMatcher } from '@angular/material/core';
 import { AuthService } from "../auth.service";
-import { Subject, takeUntil } from "rxjs";
+import { catchError, Subject, takeUntil } from "rxjs";
+import { Router } from "@angular/router";
+import { ToastrService } from "ngx-toastr";
 
 export class MyErrorStateMatcher implements ErrorStateMatcher {
   isErrorState(control: FormControl | null, form: FormGroupDirective | NgForm | null): boolean {
@@ -29,7 +31,11 @@ export class LoginComponent {
   hidePassword = true;
   private unsubscribe$ = new Subject();
 
-  constructor(private authService: AuthService) {
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private toastr: ToastrService
+  ) {
   }
 
   ngOnDestroy(): void {
@@ -42,9 +48,18 @@ export class LoginComponent {
     const password: string = <string>this.passwordFormControl.value;
 
     this.authService.login(username, password).pipe(
+      catchError(err => {
+        this.userNameFormControl.reset('');
+        this.passwordFormControl.reset('');
+        this.toastr.error('Login failed, try again', 'Error');
+        return err;
+      }),
       takeUntil(this.unsubscribe$)
     ).subscribe(res => {
-      console.log('res', res)
+      if (typeof res === 'object' && res !== null && 'userId' in res) {
+        localStorage.setItem('loginUser', JSON.stringify(res));
+        this.router.navigate(['/dashboard']);
+      }
     })
   }
 }
