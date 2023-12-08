@@ -1,0 +1,32 @@
+:host {
+  text-align: center;
+
+  .make-investment-container {
+    display: flex;
+    flex-direction: column;
+    padding: 24px 24px 48px;
+    width: 300px;
+    border: 1px solid blue;
+    border-radius: 10px;
+    margin: 50px auto;
+    box-shadow: 2px 2px 5px 0 #78b5ea;
+
+    .input-container {
+      margin: 20px 0;
+    }
+  }
+
+  .without-arrow {
+    -moz-appearance: textfield;
+  }
+
+  .without-arrow::-webkit-inner-spin-button {
+    display: none;
+  }
+
+  .without-arrow::-webkit-outer-spin-button,
+  .without-arrow::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}

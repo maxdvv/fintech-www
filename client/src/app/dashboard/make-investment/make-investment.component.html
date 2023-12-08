@@ -1,0 +1,21 @@
+<div class="make-investment-container">
+  <h4>Invest some money to become an investor and get profit</h4>
+  <mat-form-field class="input-container">
+    <mat-label>Deposit, $</mat-label>
+    <input class="without-arrow" type="number" matInput [formControl]="userMoneyFormControl">
+    @if (userMoneyFormControl.hasError('required')) {
+    <mat-error>Enter an amount of money</mat-error>
+    }
+    @if (userMoneyFormControl.hasError('min')) {
+    <mat-error>Minimum sum for investment is 1$</mat-error>
+    }
+  </mat-form-field>
+
+  <button
+    mat-raised-button
+    color="primary"
+    class="invest-btn"
+    [disabled]="userMoneyFormControl.hasError('required')"
+    (click)="makeInvest()"
+  >Invest</button>
+</div>
