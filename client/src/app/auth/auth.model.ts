@@ -5,3 +5,8 @@ export interface AuthData {
   role: string;
   invitationCode: string | null;
 }
+
+export interface LoginResponse {
+  userId: string;
+  userName: string;
+}
