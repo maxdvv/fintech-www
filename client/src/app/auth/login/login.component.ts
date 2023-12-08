@@ -7,7 +7,7 @@ import {
 } from '@angular/forms';
 import { ErrorStateMatcher } from '@angular/material/core';
 import { AuthService } from "../auth.service";
-import { catchError, Subject, takeUntil } from "rxjs";
+import { catchError, Subject, takeUntil, throwError } from "rxjs";
 import { Router } from "@angular/router";
 import { ToastrService } from "ngx-toastr";
 
@@ -52,11 +52,11 @@ export class LoginComponent {
         this.userNameFormControl.reset('');
         this.passwordFormControl.reset('');
         this.toastr.error('Login failed, try again', 'Error');
-        return err;
+        return throwError(err);
       }),
       takeUntil(this.unsubscribe$)
     ).subscribe(res => {
-      if (typeof res === 'object' && res !== null && 'userId' in res) {
+      if (typeof res === 'object' && 'userId' in res) {
         localStorage.setItem('loginUser', JSON.stringify(res));
         this.router.navigate(['/dashboard']);
       }
