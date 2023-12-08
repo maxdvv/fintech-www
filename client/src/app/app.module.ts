@@ -9,6 +9,9 @@ import { MatButtonModule } from "@angular/material/button";
 import { HTTP_INTERCEPTORS } from "@angular/common/http";
 import { BaseUrlInterceptor } from "./interceptors/base-url.interceptor";
 import { provideToastr, ToastrModule } from "ngx-toastr";
+import { DashboardModule } from "./dashboard/dashboard.module";
+import { AuthErrorInterceptor } from "./interceptors/auth-error.interceptor";
+
 
 @NgModule({
   declarations: [
@@ -17,6 +20,7 @@ import { provideToastr, ToastrModule } from "ngx-toastr";
   imports: [
     BrowserModule,
     AuthModule,
+    DashboardModule,
     AppRoutingModule,
     BrowserAnimationsModule,
     MatButtonModule,
@@ -36,6 +40,11 @@ import { provideToastr, ToastrModule } from "ngx-toastr";
     {
       provide: HTTP_INTERCEPTORS,
       useClass: BaseUrlInterceptor,
+      multi: true,
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthErrorInterceptor,
       multi: true,
     }
   ],
