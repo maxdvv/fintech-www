@@ -29,8 +29,8 @@ async function bootstrap() {
   await app.use(
     session({
       secret: process.env.SECRET_SESSION_KEY,
-      resave: false,
-      saveUninitialized: false
+      resave: Boolean(process.env.SESSION_RESAVE),
+      saveUninitialized: Boolean(process.env.SESSION_SAVE_UNINITIALIZED),
     }),
   );
   await app.use(passport.initialize());

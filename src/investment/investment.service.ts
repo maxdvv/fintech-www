@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Investment } from "./schemas/investment.schema";
 import { User } from "../auth/schemas/user.schema";
@@ -7,6 +7,7 @@ import { UserRole } from "../auth/role.enum";
 import { createInvestmentDto } from "./dto/create-investment.dto";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { InvitationCodes } from "../invitation-codes/schemas/invitation-codes.schema";
+import { CreateInvestmentResponseDto } from "./response/create-investment-response.dto";
 
 const INVESTOR_FUNDS_DAILY_COEFFICIENT = 0.01;
 const INVITER_BONUS_COEFFICIENT = 0.1;
@@ -88,10 +89,10 @@ export class InvestmentService {
     return invitedUsers;
   }
 
-  async create(investment: createInvestmentDto): Promise<Investment> {
+  async create(investment: createInvestmentDto): Promise<CreateInvestmentResponseDto> {
     const { userId, deposit } = investment;
     const updatedUserRole = await this.userModel.findOneAndUpdate(
-      { _id: investment.userId, role: UserRole.USER || UserRole.INVESTOR },
+      { _id: investment.userId, role: { $in: [UserRole.USER, UserRole.INVESTOR] } },
       { $set: { ['role']: UserRole.INVESTOR } },
       { new: true }
     );
@@ -100,7 +101,7 @@ export class InvestmentService {
       console.error('Update error');
     }
 
-    return await this.investmentModel.create({
+    const data: Investment =  await this.investmentModel.create({
       userId,
       deposit,
       profit: 0,
@@ -108,6 +109,15 @@ export class InvestmentService {
       availableProfit: 0,
       availableBonus: 0
     });
+
+    if (!data) {
+      throw new InternalServerErrorException('Investment created error!');
+    }
+
+    return {
+      status: 'SUCCESS',
+      data
+    }
   }
 
   async updateAvailableProfitById(id: string, value: number): Promise<any> {

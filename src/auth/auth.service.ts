@@ -6,6 +6,8 @@ import * as bcrypt from 'bcrypt'
 import { LoginDto } from "./dto/login.dto";
 import { UserRole } from "./role.enum";
 import { SignUpDto } from "./dto/signup.dto";
+import { LoginResponseDto } from "./response/login-response.dto";
+import { SignupResponseDto } from "./response/signup-response.dto";
 
 @Injectable()
 export class AuthService {
@@ -13,7 +15,7 @@ export class AuthService {
     @InjectModel(User.name) private userModel: Model<User>
   ) {}
 
-  async signUp(signUpDto: SignUpDto): Promise<User> {
+  async signUp(signUpDto: SignUpDto): Promise<SignupResponseDto> {
     const { username, password, email } = signUpDto;
     const invitationCode = signUpDto?.invitationCode;
     const hashedPassword = await bcrypt.hash(password, 11);
@@ -33,10 +35,14 @@ export class AuthService {
       throw new UnauthorizedException('Registered error!');
     }
 
-    return user;
+    return {
+      ...user as User,
+      status: 'SUCCESS',
+      message: 'User successfully registered',
+    }
   }
 
-  async login(session, loginDto: LoginDto): Promise<User> {
+  async login(session, loginDto: LoginDto): Promise<LoginResponseDto> {
     const { username, password } = loginDto;
     const user = await this.userModel.findOne({ username });
 
@@ -54,7 +60,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid password');
     }
 
-    return user;
+    return {
+      userId: user._id.toString(),
+      userName: user.username
+    };
   }
 
   async findUserById(id: string): Promise<User> {
