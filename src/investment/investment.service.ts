@@ -4,10 +4,11 @@ import { Investment } from "./schemas/investment.schema";
 import { User } from "../auth/schemas/user.schema";
 import { Model } from "mongoose";
 import { UserRole } from "../auth/role.enum";
-import { createInvestmentDto } from "./dto/create-investment.dto";
+import { CreateInvestmentDto } from "./dto/create-investment.dto";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { InvitationCodes } from "../invitation-codes/schemas/invitation-codes.schema";
 import { CreateInvestmentResponseDto } from "./response/create-investment-response.dto";
+import { UserBonusResponseDto } from "./response/user-bonus-response.dto";
 
 const INVESTOR_FUNDS_DAILY_COEFFICIENT = 0.01;
 const INVITER_BONUS_COEFFICIENT = 0.1;
@@ -89,7 +90,7 @@ export class InvestmentService {
     return invitedUsers;
   }
 
-  async create(investment: createInvestmentDto): Promise<CreateInvestmentResponseDto> {
+  async create(investment: CreateInvestmentDto): Promise<CreateInvestmentResponseDto> {
     const { userId, deposit } = investment;
     const updatedUserRole = await this.userModel.findOneAndUpdate(
       { _id: investment.userId, role: { $in: [UserRole.USER, UserRole.INVESTOR] } },
@@ -158,14 +159,95 @@ export class InvestmentService {
     return investment;
   }
 
-  async findAllByUserId(userId: string): Promise<Investment[]> {
+  async findAllInvestmentByUserId(userId: string): Promise<Investment[]> {
+    await this.calculateProfitByUserId(userId);
+
     const investment: Investment[] = await this.investmentModel.find({ userId });
 
-    if (!investment?.length) {
-      throw new NotFoundException('Investment not found');
+    return investment?.length ? investment : [];
+  }
+
+  async calculateProfitByUserId(userId: string) {
+    const investments = await this.investmentModel.find({ userId });
+
+    for (const investment of investments) {
+      const depositMilliseconds = new Date().getTime() - new Date(investment.createdAt).getTime();
+      const depositDays = Math.round(depositMilliseconds / MILLISECONDS_IN_ONE_DAY);
+      const profit = investment.deposit * depositDays * INVESTOR_FUNDS_DAILY_COEFFICIENT;
+      const availableProfit = profit;
+      await this.investmentModel.findByIdAndUpdate(investment._id,{ profit, availableProfit });
+    }
+  }
+
+  async calculateBonusByUserId(userId: string): Promise<UserBonusResponseDto[]> {
+    const invitation: InvitationCodes = await this.invitationCodesModel.findOne({ userId });
+
+    if (!invitation) {
+      return [];
     }
 
-    return investment;
+    const invitedUsers = await this.userModel.aggregate([
+      {
+        $match: {
+          invitationCode: invitation.investorInvitationCode,
+        },
+      },
+      {
+        $group: {
+          _id: '$invitationCode',
+          invitedUsers: {
+            $push: {
+              userId: '$_id',
+              userName: '$username',
+              email: '$email'
+            }
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: 'invitationcodes',
+          localField: '_id',
+          foreignField: 'investorInvitationCode',
+          as: 'inviter'
+        }
+      },
+    ]);
+
+    if (!invitedUsers.length) {
+      return [];
+    }
+
+    const invitedUserIds: string[] = invitedUsers[0].invitedUsers.map(item => item.userId.toString());
+
+    const profitGroupByUser: { _id: string; totalProfit: number }[] = await this.investmentModel.aggregate([
+      {
+        $match: {
+          userId: { $in: invitedUserIds },
+        },
+      },
+      {
+        $group: {
+          _id: '$userId',
+          totalProfit: { $sum: '$profit' },
+        },
+      },
+    ]);
+
+    const usersBonus = invitedUsers[0].invitedUsers.map(user => {
+      user.userId = user.userId.toString();
+      profitGroupByUser.forEach(profit => {
+        if (user.userId === profit._id) {
+          user.bonus = profit.totalProfit * INVITER_BONUS_COEFFICIENT;
+        } else {
+          user.bonus = 0;
+        }
+      });
+
+      return user;
+    });
+
+    return usersBonus?.length ? usersBonus : [];
   }
 
   async findSumAllInvestment(): Promise<number> {

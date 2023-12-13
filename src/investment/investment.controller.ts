@@ -8,6 +8,7 @@ import { RolesGuard } from "../auth/role.guard";
 import { UserRole } from "../auth/role.enum";
 import { Roles } from "../common/decorators/roles.decorator";
 import { CreateInvestmentResponseDto, InvestmentData } from "./response/create-investment-response.dto";
+import { UserBonusResponseDto } from "./response/user-bonus-response.dto";
 
 @ApiTags('investment')
 @Controller('investment')
@@ -36,11 +37,6 @@ export class InvestmentController {
     return this.investmentService.findSumAllInvestment();
   }
 
-  @Get('bonus')
-  async calcBonus(): Promise<any> {
-    return this.investmentService.calculateBonusGrowth();
-  }
-
   @Get(':id')
   @UseGuards(LocalAuthGuard)
   @ApiResponse({ status: 200, type: InvestmentData })
@@ -54,6 +50,15 @@ export class InvestmentController {
   @ApiResponse({ status: 400, description: 'Bad Request'})
   @ApiInternalServerErrorResponse({ description: 'Internal server error' })
   async getInvestmentByUserId(@Param('userId') userId: string): Promise<Investment[]> {
-    return this.investmentService.findAllByUserId(userId);
+    return this.investmentService.findAllInvestmentByUserId(userId);
+  }
+
+  @Get('bonus/:userId')
+  @UseGuards(LocalAuthGuard)
+  @ApiResponse({ status: 200, type: [UserBonusResponseDto] })
+  @ApiResponse({ status: 400, description: 'Bad Request'})
+  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
+  async getBonusByUserId(@Param('userId') userId: string): Promise<UserBonusResponseDto[]> {
+    return this.investmentService.calculateBonusByUserId(userId);
   }
 }
