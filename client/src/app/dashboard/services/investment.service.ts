@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from "rxjs";
 import { apis } from "../../../environments";
 import { HttpClient } from "@angular/common/http";
-import { CreateInvestmentResponse, ServerResponse } from "../models/investment.model";
+import { CreateInvestmentResponse, ServerResponse, UserBonus } from "../models/investment.model";
 
 @Injectable({
   providedIn: 'root'
@@ -19,5 +19,9 @@ export class InvestmentService {
 
   public getInvestment(userId: string): Observable<CreateInvestmentResponse[]> {
     return this.http.get<CreateInvestmentResponse[]>(`${apis.getInvestmentByUserId}/${userId}`,  { withCredentials: true });
+  }
+
+  public getBonus(userId: string): Observable<UserBonus[]> {
+    return this.http.get<UserBonus[]>(`${apis.getBonusByUserId}/${userId}`,  { withCredentials: true });
   }
 }

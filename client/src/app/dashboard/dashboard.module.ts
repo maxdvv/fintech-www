@@ -13,12 +13,14 @@ import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { MatInputModule } from "@angular/material/input";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatTableModule } from "@angular/material/table";
+import { BonusComponent } from "./bonus/bonus.component";
 
 @NgModule({
   declarations: [
     DashboardComponent,
     MakeInvestmentComponent,
-    InvestmentComponent
+    InvestmentComponent,
+    BonusComponent
   ],
   imports: [
     CommonModule,
@@ -38,7 +40,8 @@ import { MatTableModule } from "@angular/material/table";
   exports: [
     DashboardComponent,
     MakeInvestmentComponent,
-    InvestmentComponent
+    InvestmentComponent,
+    BonusComponent
   ]
 })
 export class DashboardModule { }

@@ -15,3 +15,10 @@ export interface CreateInvestmentResponse {
   updatedAt: string,
 }
 
+export interface UserBonus {
+  userId: string;
+  userName: string;
+  email: string;
+  bonus: number;
+}
+

@@ -7,5 +7,5 @@ export const apis = {
   getInvestment: '/investment',
   getInvestmentById: '/investment',
   getInvestmentByUserId: '/investment/user',
-  getBonus: '/investment/bonus'
+  getBonusByUserId: '/investment/bonus'
 }

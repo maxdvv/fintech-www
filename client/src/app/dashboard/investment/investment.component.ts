@@ -11,7 +11,7 @@ import { CreateInvestmentResponse } from "../models/investment.model";
 })
 export class InvestmentComponent implements OnInit, OnDestroy {
   public investments: CreateInvestmentResponse[] = [];
-  public displayedColumns: string[] = ['createdAt', 'deposit', 'availableProfit', 'availableBonus'];
+  public displayedColumns: string[] = ['createdAt', 'deposit', 'profit', 'availableProfit'];
 
   constructor(
     private investmentService: InvestmentService,
