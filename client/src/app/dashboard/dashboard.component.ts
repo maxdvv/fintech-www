@@ -1,12 +1,13 @@
-import { Component, OnDestroy, OnInit } from "@angular/core";
-import { AuthService } from "../auth/auth.service";
-import { Subject, takeUntil } from "rxjs";
-import { Router } from "@angular/router";
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
+import { AuthService } from '../auth/auth.service';
+import { Subject, takeUntil } from 'rxjs';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.scss'
+  styleUrl: './dashboard.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   userName = '';
@@ -14,8 +15,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private unsubscribe$ = new Subject();
 
-  constructor(private authService: AuthService, private router: Router) {
-  }
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   ngOnInit() {
     const user = JSON.parse(<string>localStorage.getItem('loginUser'));
@@ -29,14 +32,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   logout(): void {
-    this.authService.logout().pipe(
-      takeUntil(this.unsubscribe$)
-    ).subscribe(res => {
-      console.log('res', res)
-      if (res.status === 'SUCCESS') {
-        localStorage.removeItem('loginUser');
-        this.router.navigate(['/login']);
-      }
-    });
+    this.authService
+      .logout()
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe((res) => {
+        if (res.status === 'SUCCESS') {
+          localStorage.removeItem('loginUser');
+          this.router.navigate(['/login']);
+        }
+      });
   }
 }

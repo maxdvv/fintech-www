@@ -11,13 +11,19 @@
 
 <mat-tab-group>
   <mat-tab label="Make an investment">
-    <app-make-investment></app-make-investment>
+    <ng-template matTabContent>
+      <app-make-investment></app-make-investment>
+    </ng-template>
   </mat-tab>
   <mat-tab label="Investment">
-    <app-investment></app-investment>
+    <ng-template matTabContent>
+      <app-investment></app-investment>
+    </ng-template>
   </mat-tab>
   <mat-tab label="Bonus">
-    <app-bonus></app-bonus>
+    <ng-template matTabContent>
+      <app-bonus></app-bonus>
+    </ng-template>
   </mat-tab>
   <mat-tab label="Withdrawal">
     Get money

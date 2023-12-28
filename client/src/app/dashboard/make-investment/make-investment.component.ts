@@ -1,21 +1,25 @@
-import { Component } from '@angular/core';
-import { FormControl, Validators } from "@angular/forms";
-import { InvestmentService } from "../services/investment.service";
-import { Subject, takeUntil } from "rxjs";
-import { ToastrService } from "ngx-toastr";
+import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
+import { FormControl, Validators } from '@angular/forms';
+import { InvestmentService } from '../services/investment.service';
+import { Subject, takeUntil } from 'rxjs';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-make-investment',
   templateUrl: './make-investment.component.html',
-  styleUrl: './make-investment.component.scss'
+  styleUrl: './make-investment.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MakeInvestmentComponent {
-  userMoneyFormControl: FormControl<number | null> = new FormControl(null, [Validators.required, Validators.min(1)]);
+export class MakeInvestmentComponent implements OnDestroy {
+  userMoneyFormControl: FormControl<number | null> = new FormControl(null, [
+    Validators.required,
+    Validators.min(1)
+  ]);
 
   constructor(
     private investmentService: InvestmentService,
     private toastr: ToastrService
-  ) { }
+  ) {}
 
   private unsubscribe$ = new Subject();
 
@@ -31,16 +35,15 @@ export class MakeInvestmentComponent {
       return;
     }
 
-    this.investmentService.addInvestment(loginUser.userId, userMoney).pipe(
-      takeUntil(this.unsubscribe$)
-    ).subscribe(res => {
-      if (res.status === 'SUCCESS') {
-        console.log('res', res);
-        this.userMoneyFormControl.reset();
-        this.investmentService.isMakeInvestment$.next(true);
-        this.toastr.success('You have successfully made investment', 'Success');
-      }
-
-    })
+    this.investmentService
+      .addInvestment(loginUser.userId, userMoney)
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe((res) => {
+        if (res.status === 'SUCCESS') {
+          this.userMoneyFormControl.reset();
+          this.investmentService.isMakeInvestment$.next(true);
+          this.toastr.success('You have successfully made investment', 'Success');
+        }
+      });
   }
 }

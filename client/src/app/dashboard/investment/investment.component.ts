@@ -1,13 +1,20 @@
-import { Component, OnDestroy, OnInit } from "@angular/core";
-import { InvestmentService } from "../services/investment.service";
-import { ToastrService } from "ngx-toastr";
-import { Subject, switchMap, takeUntil } from "rxjs";
-import { CreateInvestmentResponse } from "../models/investment.model";
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  OnInit
+} from '@angular/core';
+import { InvestmentService } from '../services/investment.service';
+import { ToastrService } from 'ngx-toastr';
+import { Subject, switchMap, takeUntil } from 'rxjs';
+import { CreateInvestmentResponse } from '../models/investment.model';
 
 @Component({
   selector: 'app-investment',
   templateUrl: './investment.component.html',
-  styleUrl: './investment.component.scss'
+  styleUrl: './investment.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class InvestmentComponent implements OnInit, OnDestroy {
   public investments: CreateInvestmentResponse[] = [];
@@ -15,8 +22,9 @@ export class InvestmentComponent implements OnInit, OnDestroy {
 
   constructor(
     private investmentService: InvestmentService,
+    private cdr: ChangeDetectorRef,
     private toastr: ToastrService
-  ) { }
+  ) {}
 
   private unsubscribe$ = new Subject();
 
@@ -37,13 +45,16 @@ export class InvestmentComponent implements OnInit, OnDestroy {
   private getInvestment(): void {
     const loginUser = JSON.parse(<string>localStorage.getItem('loginUser'));
     if (!loginUser) return;
-    this.investmentService.isMakeInvestment$.pipe(
-      switchMap(res => {
-        return this.investmentService.getInvestment(loginUser.userId);
-      }),
-      takeUntil(this.unsubscribe$)
-    ).subscribe(res => {
-      this.investments = res;
-    });
+    this.investmentService.isMakeInvestment$
+      .pipe(
+        switchMap(() => {
+          return this.investmentService.getInvestment(loginUser.userId);
+        }),
+        takeUntil(this.unsubscribe$)
+      )
+      .subscribe((res) => {
+        this.investments = res;
+        this.cdr.markForCheck();
+      });
   }
 }

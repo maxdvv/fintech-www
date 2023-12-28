@@ -22,73 +22,73 @@ export class InvestmentService {
     @InjectModel(InvitationCodes.name) private invitationCodesModel: Model<InvitationCodes>
   ) {}
 
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  async calculateDepositGrowth() {
-    const investments = await this.investmentModel.find();
-
-    for (const investment of investments) {
-      const depositMilliseconds = new Date().getTime() - new Date(investment.createdAt).getTime();
-      const depositDays = Math.round(depositMilliseconds / MILLISECONDS_IN_ONE_DAY);
-      const profit = investment.deposit * depositDays * INVESTOR_FUNDS_DAILY_COEFFICIENT;
-      await this.investmentModel.findByIdAndUpdate(investment._id,{ profit });
-    }
-  }
-
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  async calculateBonusGrowth(): Promise<any> {
-    const invitedUsers = await this.userModel.aggregate([
-      {
-        $match: {
-          invitationCode: { $ne: '' },
-        },
-      },
-      {
-        $group: {
-          _id: '$invitationCode',
-          invitedUsers: { $push: '$_id' },
-        },
-      },
-      {
-        $lookup: {
-          from: 'invitationcodes',
-          localField: '_id',
-          foreignField: 'investorInvitationCode',
-          as: 'inviter'
-        }
-      },
-    ]).exec();
-
-    const profitGroupByUser = await this.investmentModel.aggregate([
-      {
-        $group: {
-          _id: '$userId',
-          totalProfit: { $sum: '$profit' },
-        },
-      },
-    ]).exec();
-
-    invitedUsers.forEach(invitedUser => {
-      invitedUser.userId = invitedUser.inviter[0].userId;
-      invitedUser.bonus = 0;
-      const iUsers = invitedUser.invitedUsers.map(user => user._id.toString());
-
-      profitGroupByUser.forEach(profit => {
-        if (iUsers.includes(profit._id)) {
-          invitedUser.bonus += profit.totalProfit * INVITER_BONUS_COEFFICIENT;
-        }
-      })
-    });
-
-    for (const invited of invitedUsers) {
-      await this.investmentModel.findOneAndUpdate(
-        { _id: invited.userId },
-        { $set: { ['bonus']: invited.bonus } },
-        { new: true }
-      );
-    }
-
-    return invitedUsers;
-  }
+  // @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  // async calculateDepositGrowth() {
+  //   const investments = await this.investmentModel.find();
+  //
+  //   for (const investment of investments) {
+  //     const depositMilliseconds = new Date().getTime() - new Date(investment.createdAt).getTime();
+  //     const depositDays = Math.round(depositMilliseconds / MILLISECONDS_IN_ONE_DAY);
+  //     const profit = investment.deposit * depositDays * INVESTOR_FUNDS_DAILY_COEFFICIENT;
+  //     await this.investmentModel.findByIdAndUpdate(investment._id,{ profit });
+  //   }
+  // }
+  //
+  // @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  // async calculateBonusGrowth(): Promise<any> {
+  //   const invitedUsers = await this.userModel.aggregate([
+  //     {
+  //       $match: {
+  //         invitationCode: { $ne: '' },
+  //       },
+  //     },
+  //     {
+  //       $group: {
+  //         _id: '$invitationCode',
+  //         invitedUsers: { $push: '$_id' },
+  //       },
+  //     },
+  //     {
+  //       $lookup: {
+  //         from: 'invitationcodes',
+  //         localField: '_id',
+  //         foreignField: 'investorInvitationCode',
+  //         as: 'inviter'
+  //       }
+  //     },
+  //   ]).exec();
+  //
+  //   const profitGroupByUser = await this.investmentModel.aggregate([
+  //     {
+  //       $group: {
+  //         _id: '$userId',
+  //         totalProfit: { $sum: '$profit' },
+  //       },
+  //     },
+  //   ]).exec();
+  //
+  //   invitedUsers.forEach(invitedUser => {
+  //     invitedUser.userId = invitedUser.inviter[0].userId;
+  //     invitedUser.bonus = 0;
+  //     const iUsers = invitedUser.invitedUsers.map(user => user._id.toString());
+  //
+  //     profitGroupByUser.forEach(profit => {
+  //       if (iUsers.includes(profit._id)) {
+  //         invitedUser.bonus += profit.totalProfit * INVITER_BONUS_COEFFICIENT;
+  //       }
+  //     })
+  //   });
+  //
+  //   for (const invited of invitedUsers) {
+  //     await this.investmentModel.findOneAndUpdate(
+  //       { _id: invited.userId },
+  //       { $set: { ['bonus']: invited.bonus } },
+  //       { new: true }
+  //     );
+  //   }
+  //
+  //   return invitedUsers;
+  // }
 
   async create(investment: CreateInvestmentDto): Promise<CreateInvestmentResponseDto> {
     const { userId, deposit } = investment;
@@ -173,7 +173,7 @@ export class InvestmentService {
     for (const investment of investments) {
       const depositMilliseconds = new Date().getTime() - new Date(investment.createdAt).getTime();
       const depositDays = Math.round(depositMilliseconds / MILLISECONDS_IN_ONE_DAY);
-      const profit = investment.deposit * depositDays * INVESTOR_FUNDS_DAILY_COEFFICIENT;
+      const profit =  Math.floor((investment.deposit * depositDays * INVESTOR_FUNDS_DAILY_COEFFICIENT) * 100) / 100;
       const availableProfit = profit;
       await this.investmentModel.findByIdAndUpdate(investment._id,{ profit, availableProfit });
     }
@@ -235,12 +235,10 @@ export class InvestmentService {
     ]);
 
     const usersBonus = invitedUsers[0].invitedUsers.map(user => {
-      user.userId = user.userId.toString();
+      user.bonus = 0;
       profitGroupByUser.forEach(profit => {
-        if (user.userId === profit._id) {
-          user.bonus = profit.totalProfit * INVITER_BONUS_COEFFICIENT;
-        } else {
-          user.bonus = 0;
+        if (user.userId.toString() === profit._id) {
+          user.bonus = Math.floor((profit.totalProfit * INVITER_BONUS_COEFFICIENT) * 100) / 100;
         }
       });
 

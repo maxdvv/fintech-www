@@ -7,12 +7,12 @@ export interface CreateInvestmentResponse {
   userId: string;
   deposit: number;
   profit: number;
-  bonus: number
-  availableProfit: number
-  availableBonus: number
+  bonus: number;
+  availableProfit: number;
+  availableBonus: number;
   _id: string;
-  createdAt: string,
-  updatedAt: string,
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface UserBonus {
@@ -21,4 +21,3 @@ export interface UserBonus {
   email: string;
   bonus: number;
 }
-

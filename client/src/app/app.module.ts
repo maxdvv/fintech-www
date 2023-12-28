@@ -8,7 +8,7 @@ import { AuthModule } from "./auth/auth.module";
 import { MatButtonModule } from "@angular/material/button";
 import { HTTP_INTERCEPTORS } from "@angular/common/http";
 import { BaseUrlInterceptor } from "./interceptors/base-url.interceptor";
-import { provideToastr, ToastrModule } from "ngx-toastr";
+import { ToastrModule } from "ngx-toastr";
 import { DashboardModule } from "./dashboard/dashboard.module";
 import { AuthErrorInterceptor } from "./interceptors/auth-error.interceptor";
 
