@@ -1,38 +1,57 @@
 <div class="investments-container">
-  <h3>My investment</h3>
+  <div class="header">
+    <h3>My investment</h3>
+    <button
+      mat-raised-button
+      color="primary"
+      [disabled]="investments.length && !getTotalCost('availableProfit')"
+      (click)="getAvailableProfit()"
+    >
+      Withdraw profit
+    </button>
+  </div>
 
   @if (investments.length) {
     <table mat-table [dataSource]="investments" class="mat-table">
       <ng-container matColumnDef="createdAt">
-        <th mat-header-cell *matHeaderCellDef> Created At </th>
-        <td mat-cell *matCellDef="let element"> {{element?.createdAt | date:'MMM dd, yyyy H:mm:ss'}} </td>
-        <td mat-footer-cell *matFooterCellDef> Total </td>
+        <th mat-header-cell *matHeaderCellDef>Created At</th>
+        <td mat-cell *matCellDef="let element">{{ element?.createdAt | date: 'MMM dd, yyyy H:mm:ss' }}</td>
+        <td mat-footer-cell *matFooterCellDef>Total</td>
       </ng-container>
 
       <ng-container matColumnDef="deposit">
-        <th mat-header-cell *matHeaderCellDef> Deposit </th>
-        <td mat-cell *matCellDef="let element"> {{element?.deposit}} </td>
-        <td mat-footer-cell *matFooterCellDef> {{getTotalCost('deposit')}} </td>
+        <th mat-header-cell *matHeaderCellDef>Deposit</th>
+        <td mat-cell *matCellDef="let element">{{ element?.deposit }}</td>
+        <td mat-footer-cell *matFooterCellDef>{{ getTotalCost('deposit') }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="depositDays">
+        <th mat-header-cell *matHeaderCellDef>Deposit days</th>
+        <td mat-cell *matCellDef="let element">{{ element?.createdAt | daysBetweenTwoDate }}</td>
+        <td mat-footer-cell *matFooterCellDef></td>
       </ng-container>
 
       <ng-container matColumnDef="profit">
-        <th mat-header-cell *matHeaderCellDef> Accrued profit </th>
-        <td mat-cell *matCellDef="let element"> {{element?.profit}} </td>
-        <td mat-footer-cell *matFooterCellDef> {{getTotalCost('profit')}} </td>
+        <th mat-header-cell *matHeaderCellDef>Accrued profit</th>
+        <td mat-cell *matCellDef="let element">{{ element?.profit }}</td>
+        <td mat-footer-cell *matFooterCellDef>{{ getTotalCost('profit') }}</td>
       </ng-container>
 
       <ng-container matColumnDef="availableProfit">
-        <th mat-header-cell *matHeaderCellDef> Available profit </th>
-        <td mat-cell *matCellDef="let element"> {{element?.availableProfit}} </td>
-        <td mat-footer-cell *matFooterCellDef> {{getTotalCost('availableProfit')}} </td>
+        <th mat-header-cell *matHeaderCellDef>Available profit</th>
+        <td mat-cell *matCellDef="let element">{{ element?.availableProfit }}</td>
+        <td mat-footer-cell *matFooterCellDef>{{ getTotalCost('availableProfit') }}</td>
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
       <tr mat-footer-row *matFooterRowDef="displayedColumns" class="footer-row"></tr>
     </table>
+  } @else if (loading) {
+    <div class="loader-container">
+      <mat-spinner></mat-spinner>
+    </div>
   } @else {
     <div class="not-found">No investment found yet</div>
   }
 </div>
-

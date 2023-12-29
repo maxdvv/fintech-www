@@ -7,5 +7,8 @@ export const apis = {
   getInvestment: '/investment',
   getInvestmentById: '/investment',
   getInvestmentByUserId: '/investment/user',
-  getBonusByUserId: '/investment/bonus'
+  getBonusByUserId: '/investment/bonus',
+
+  getAvailableProfit: '/withdrawals/available/profit',
+  getUserWithdrawal: '/withdrawals/user'
 }

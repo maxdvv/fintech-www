@@ -1,18 +1,8 @@
-.investments-container {
+.withdrawal-container {
   margin-top: 50px;
 
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    h3 {
-      margin-left: 24px;
-    }
-
-    button {
-      margin-right: 24px;
-    }
+  h3 {
+    margin-left: 24px;
   }
 
   .mat-table {
