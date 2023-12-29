@@ -18,6 +18,7 @@ import { LoginResponse } from '../../auth/auth.model';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BonusComponent implements OnInit, OnDestroy {
+  public loading = false;
   public bonus: UserBonus[] = [];
   public totalBonus = 0;
   public displayedColumns: string[] = ['userName', 'email', 'bonus'];
@@ -43,12 +44,14 @@ export class BonusComponent implements OnInit, OnDestroy {
     const loginUser = <LoginResponse>JSON.parse(<string>localStorage.getItem('loginUser'));
     if (!loginUser) return;
 
+    this.loading = true;
     this.investmentService
       .getBonus(loginUser.userId)
       .pipe(takeUntil(this.unsubscribe$))
       .subscribe((res) => {
         this.bonus = res;
         this.totalBonus = this.bonus.reduce((acc, item) => acc + item.bonus, 0);
+        this.loading = false;
         this.cdr.markForCheck();
       });
   }

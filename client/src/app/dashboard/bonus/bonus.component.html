@@ -1,32 +1,35 @@
 <div class="bonus-container">
   <h3>My bonus for invested users</h3>
 
-  @if(bonus.length) {
+  @if (bonus.length) {
     <table mat-table [dataSource]="bonus" class="mat-table">
       <ng-container matColumnDef="userName">
-        <th mat-header-cell *matHeaderCellDef> User name </th>
-        <td mat-cell *matCellDef="let element"> {{element?.userName}} </td>
-        <td mat-footer-cell *matFooterCellDef> Total </td>
+        <th mat-header-cell *matHeaderCellDef>User name</th>
+        <td mat-cell *matCellDef="let element">{{ element?.userName }}</td>
+        <td mat-footer-cell *matFooterCellDef>Total</td>
       </ng-container>
 
       <ng-container matColumnDef="email">
-        <th mat-header-cell *matHeaderCellDef> Email </th>
-        <td mat-cell *matCellDef="let element"> {{element?.email}} </td>
+        <th mat-header-cell *matHeaderCellDef>Email</th>
+        <td mat-cell *matCellDef="let element">{{ element?.email }}</td>
         <td mat-footer-cell *matFooterCellDef></td>
       </ng-container>
 
       <ng-container matColumnDef="bonus">
-        <th mat-header-cell *matHeaderCellDef> Accured bonus </th>
-        <td mat-cell *matCellDef="let element"> {{element?.bonus}} </td>
-        <td mat-footer-cell *matFooterCellDef> {{totalBonus}} </td>
+        <th mat-header-cell *matHeaderCellDef>Accured bonus</th>
+        <td mat-cell *matCellDef="let element">{{ element?.bonus }}</td>
+        <td mat-footer-cell *matFooterCellDef>{{ totalBonus }}</td>
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
       <tr mat-footer-row *matFooterRowDef="displayedColumns" class="footer-row"></tr>
     </table>
+  } @else if (loading) {
+    <div class="loader-container">
+      <mat-spinner></mat-spinner>
+    </div>
   } @else {
     <div class="not-found">No bonus found yet</div>
   }
 </div>
-

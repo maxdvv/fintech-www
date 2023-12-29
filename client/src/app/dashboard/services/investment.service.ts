@@ -33,4 +33,10 @@ export class InvestmentService {
       withCredentials: true
     });
   }
+
+  public getAvailableProfit(userId: string): Observable<any> {
+    return this.http.get(`${apis.getAvailableProfit}/${userId}`, {
+      withCredentials: true
+    });
+  }
 }
