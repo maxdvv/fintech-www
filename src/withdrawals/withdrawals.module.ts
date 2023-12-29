@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { WithdrawalsService } from './withdrawals.service';
 import { WithdrawalsController } from './withdrawals.controller';
-import { MongooseModule } from "@nestjs/mongoose";
-import { Investment, investmentSchema } from "../investment/schemas/investment.schema";
-import { InvestmentModule } from "../investment/investment.module";
-import { withdrawalSchema } from "./schemas/withdrawals.schema";
+import { MongooseModule } from '@nestjs/mongoose';
+import { investmentSchema } from '../investment/schemas/investment.schema';
+import { InvestmentModule } from '../investment/investment.module';
+import { withdrawalSchema } from './schemas/withdrawals.schema';
 
 @Module({
   imports: [
@@ -12,9 +12,10 @@ import { withdrawalSchema } from "./schemas/withdrawals.schema";
     MongooseModule.forFeature([
       { name: 'Investment', schema: investmentSchema },
       { name: 'Withdrawal', schema: withdrawalSchema },
-    ])
+    ]),
   ],
   controllers: [WithdrawalsController],
   providers: [WithdrawalsService],
+  exports: [WithdrawalsService],
 })
 export class WithdrawalsModule {}

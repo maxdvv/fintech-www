@@ -1,20 +1,56 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
-import { InvestmentService } from "../investment/investment.service";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
-import { Withdrawal } from "./schemas/withdrawals.schema";
-import { WithdrawalCategory } from "./withdrawal.enum";
-import { WithdrawDepositDto } from "./dto/withdraw-deposit";
-import { WithdrawProfitDto } from "./dto/withdraw-profit.dto";
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
+import { InvestmentService } from '../investment/investment.service';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Withdrawal } from './schemas/withdrawals.schema';
+import { WithdrawalCategory } from './withdrawal.enum';
+import { WithdrawDepositDto } from './dto/withdraw-deposit';
+import { WithdrawProfitDto } from './dto/withdraw-profit.dto';
+import { Investment } from '../investment/schemas/investment.schema';
 
 @Injectable()
 export class WithdrawalsService {
   constructor(
     private investmentService: InvestmentService,
-    @InjectModel(Withdrawal.name) private withdrawalModel: Model<Withdrawal>
+    @InjectModel(Investment.name) private investmentModel: Model<Investment>,
+    @InjectModel(Withdrawal.name) private withdrawalModel: Model<Withdrawal>,
   ) {}
 
-  async withdrawProfit(withdrawProfitDto: WithdrawProfitDto): Promise<Withdrawal> {
+  async withdrawAvailableProfit(userId: string): Promise<Withdrawal[]> {
+    const withdrawProfit: Withdrawal[] = await this.investmentModel
+      .aggregate([
+        {
+          $match: {
+            userId,
+            availableProfit: { $gt: 0 },
+          },
+        },
+        {
+          $project: {
+            userId: 1,
+            investmentId: { $toString: '$_id' },
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            category: 'PROFIT',
+            sum: '$availableProfit',
+          },
+        },
+        {
+          $out: 'withdrawals',
+        },
+      ])
+      .exec();
+
+    return withdrawProfit;
+  }
+
+  async withdrawProfit(
+    withdrawProfitDto: WithdrawProfitDto,
+  ): Promise<Withdrawal> {
     const { userId, investmentId, sum } = withdrawProfitDto;
     const investment = await this.investmentService.findById(investmentId);
 
@@ -29,38 +65,46 @@ export class WithdrawalsService {
     }
 
     if (isWithdrawalExist) {
-      const withdrawProfitAggregationRes = await this.withdrawalModel.aggregate([
-        {
-          $match: {
-            userId,
-            investmentId,
-            category: WithdrawalCategory.PROFIT,
+      const withdrawProfitAggregationRes = await this.withdrawalModel
+        .aggregate([
+          {
+            $match: {
+              userId,
+              investmentId,
+              category: WithdrawalCategory.PROFIT,
+            },
           },
-        },
-        {
-          $group: {
-            _id: null,
-            total: { $sum: '$sum' },
+          {
+            $group: {
+              _id: null,
+              total: { $sum: '$sum' },
+            },
           },
-        },
-      ]).exec();
+        ])
+        .exec();
 
-      const withdrawProfit = withdrawProfitAggregationRes.length > 0 ? withdrawProfitAggregationRes[0].total : 0;
+      const withdrawProfit =
+        withdrawProfitAggregationRes.length > 0
+          ? withdrawProfitAggregationRes[0].total
+          : 0;
 
-      if (investment.profit < (+sum + withdrawProfit)) {
+      if (investment.profit < +sum + withdrawProfit) {
         throw new InternalServerErrorException('Insufficient funds');
       }
 
       const availableProfit = investment.profit - withdrawProfit - sum;
-      await this.investmentService.updateAvailableProfitById(investmentId, availableProfit);
+      await this.investmentService.updateAvailableProfitById(
+        investmentId,
+        availableProfit,
+      );
     }
 
     const withdrawalCreated = await this.withdrawalModel.create({
       userId,
       investmentId,
       category: WithdrawalCategory.PROFIT,
-      sum
-    })
+      sum,
+    });
 
     if (!withdrawalCreated) {
       throw new InternalServerErrorException('Created error');
@@ -69,7 +113,9 @@ export class WithdrawalsService {
     return withdrawalCreated;
   }
 
-  async withdrawBonus(withdrawProfitDto: WithdrawProfitDto): Promise<Withdrawal> {
+  async withdrawBonus(
+    withdrawProfitDto: WithdrawProfitDto,
+  ): Promise<Withdrawal> {
     const { userId, investmentId, sum } = withdrawProfitDto;
     const investment = await this.investmentService.findById(investmentId);
 
@@ -84,38 +130,46 @@ export class WithdrawalsService {
     }
 
     if (isWithdrawalExist) {
-      const withdrawBonusAggregationRes = await this.withdrawalModel.aggregate([
-        {
-          $match: {
-            userId,
-            investmentId,
-            category: WithdrawalCategory.BONUS,
+      const withdrawBonusAggregationRes = await this.withdrawalModel
+        .aggregate([
+          {
+            $match: {
+              userId,
+              investmentId,
+              category: WithdrawalCategory.BONUS,
+            },
           },
-        },
-        {
-          $group: {
-            _id: null,
-            total: { $sum: '$sum' },
+          {
+            $group: {
+              _id: null,
+              total: { $sum: '$sum' },
+            },
           },
-        },
-      ]).exec();
+        ])
+        .exec();
 
-      const withdrawBonus = withdrawBonusAggregationRes.length > 0 ? withdrawBonusAggregationRes[0].total : 0;
+      const withdrawBonus =
+        withdrawBonusAggregationRes.length > 0
+          ? withdrawBonusAggregationRes[0].total
+          : 0;
 
-      if (investment.bonus < (+sum + withdrawBonus)) {
+      if (investment.bonus < +sum + withdrawBonus) {
         throw new InternalServerErrorException('Insufficient funds');
       }
 
       const availableBonus = investment.bonus - withdrawBonus - sum;
-      await this.investmentService.updateAvailableBonusById(investmentId, availableBonus);
+      await this.investmentService.updateAvailableBonusById(
+        investmentId,
+        availableBonus,
+      );
     }
 
     const withdrawalCreated = await this.withdrawalModel.create({
       userId,
       investmentId,
       category: WithdrawalCategory.BONUS,
-      sum
-    })
+      sum,
+    });
 
     if (!withdrawalCreated) {
       throw new InternalServerErrorException('Created error');
@@ -124,7 +178,9 @@ export class WithdrawalsService {
     return withdrawalCreated;
   }
 
-  async withdrawDeposit(withdrawDepositDto: WithdrawDepositDto): Promise<Withdrawal> {
+  async withdrawDeposit(
+    withdrawDepositDto: WithdrawDepositDto,
+  ): Promise<Withdrawal> {
     const { sum } = withdrawDepositDto;
     const investmentSum = await this.investmentService.findSumAllInvestment();
 
@@ -139,31 +195,36 @@ export class WithdrawalsService {
     }
 
     if (isWithdrawalExist) {
-      const withdrawDepositAggregationRes = await this.withdrawalModel.aggregate([
-        {
-          $match: {
-            category: WithdrawalCategory.DEPOSIT,
+      const withdrawDepositAggregationRes = await this.withdrawalModel
+        .aggregate([
+          {
+            $match: {
+              category: WithdrawalCategory.DEPOSIT,
+            },
           },
-        },
-        {
-          $group: {
-            _id: null,
-            total: { $sum: '$sum' },
+          {
+            $group: {
+              _id: null,
+              total: { $sum: '$sum' },
+            },
           },
-        },
-      ]).exec();
+        ])
+        .exec();
 
-      const withdrawDeposit = withdrawDepositAggregationRes.length > 0 ? withdrawDepositAggregationRes[0].total : 0;
+      const withdrawDeposit =
+        withdrawDepositAggregationRes.length > 0
+          ? withdrawDepositAggregationRes[0].total
+          : 0;
 
-      if (investmentSum < (+sum + withdrawDeposit)) {
+      if (investmentSum < +sum + withdrawDeposit) {
         throw new InternalServerErrorException('Insufficient funds');
       }
     }
 
     const withdrawalCreated = await this.withdrawalModel.create({
       category: WithdrawalCategory.DEPOSIT,
-      sum
-    })
+      sum,
+    });
 
     if (!withdrawalCreated) {
       throw new InternalServerErrorException('Created error');
@@ -173,20 +234,42 @@ export class WithdrawalsService {
   }
 
   async findSumAllWithdrawal(): Promise<number> {
-    const withdrawalSumAggregationRes = await this.withdrawalModel.aggregate([
-      {
-        $group: {
-          _id: null,
-          total: { $sum: '$sum' },
+    const withdrawalSumAggregationRes = await this.withdrawalModel
+      .aggregate([
+        {
+          $group: {
+            _id: null,
+            total: { $sum: '$sum' },
+          },
         },
-      },
-    ]).exec();
+      ])
+      .exec();
 
-    return withdrawalSumAggregationRes.length > 0 ? withdrawalSumAggregationRes[0].total : 0;
+    return withdrawalSumAggregationRes.length > 0
+      ? withdrawalSumAggregationRes[0].total
+      : 0;
+  }
+
+  async findWithdrawProfitByUserId(userId: string): Promise<number> {
+    const userWithdrawProfit = await this.withdrawalModel.find({ userId });
+    return userWithdrawProfit.reduce((acc, item) => (acc += item.sum), 0);
+  }
+
+  async findWithdrawProfitByInvestmentId(
+    investmentId: string,
+  ): Promise<number> {
+    const userWithdrawProfit = await this.withdrawalModel.find({
+      investmentId,
+    });
+    return userWithdrawProfit.reduce((acc, item) => (acc += item.sum), 0);
+  }
+
+  async allUserWithdrawal(userId: string): Promise<Withdrawal[]> {
+    return this.withdrawalModel.find({ userId });
   }
 
   async findAll(): Promise<Withdrawal[]> {
-    return (await this.withdrawalModel.find());
+    return this.withdrawalModel.find();
   }
 
   async findOne(id: number): Promise<Withdrawal> {

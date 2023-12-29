@@ -1,18 +1,22 @@
-import { Controller, Get, Post, Body, UseGuards } from "@nestjs/common";
+import { Controller, Get, Post, Body, UseGuards, Param } from '@nestjs/common';
 import { WithdrawalsService } from './withdrawals.service';
-import { ApiResponse, ApiTags } from "@nestjs/swagger";
-import { InvestmentService } from "../investment/investment.service";
-import { Roles } from "../common/decorators/roles.decorator";
-import { UserRole } from "../auth/role.enum";
-import { RolesGuard } from "../auth/role.guard";
-import { LocalAuthGuard } from "../auth/local.auth.guard";
-import { WithdrawDepositDto } from "./dto/withdraw-deposit";
-import { WithdrawProfitDto } from "./dto/withdraw-profit.dto";
+import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { InvestmentService } from '../investment/investment.service';
+import { Roles } from '../common/decorators/roles.decorator';
+import { UserRole } from '../auth/role.enum';
+import { RolesGuard } from '../auth/role.guard';
+import { LocalAuthGuard } from '../auth/local.auth.guard';
+import { WithdrawDepositDto } from './dto/withdraw-deposit';
+import { WithdrawProfitDto } from './dto/withdraw-profit.dto';
+import { Withdrawal } from './schemas/withdrawals.schema';
 
 @ApiTags('withdrawals')
 @Controller('withdrawals')
 export class WithdrawalsController {
-  constructor(private readonly withdrawalsService: WithdrawalsService, private investmentService: InvestmentService) {}
+  constructor(
+    private readonly withdrawalsService: WithdrawalsService,
+    private investmentService: InvestmentService,
+  ) {}
 
   @Post('profit')
   @Roles(UserRole.INVESTOR)
@@ -45,5 +49,39 @@ export class WithdrawalsController {
   @ApiResponse({ status: 200, type: Number })
   async getAllWithdrawal(): Promise<number> {
     return this.withdrawalsService.findSumAllWithdrawal();
+  }
+
+  @Get('investment/:investmentId')
+  @Roles(UserRole.INVESTOR)
+  @UseGuards(RolesGuard)
+  @UseGuards(LocalAuthGuard)
+  @ApiResponse({ status: 200, type: Number })
+  async getWithdrawProfitByInvestmentId(
+    @Param('investmentId') investmentId: string,
+  ): Promise<number> {
+    return this.withdrawalsService.findWithdrawProfitByInvestmentId(
+      investmentId,
+    );
+  }
+
+  @Get('user/:userId')
+  @Roles(UserRole.INVESTOR)
+  @UseGuards(RolesGuard)
+  @UseGuards(LocalAuthGuard)
+  @ApiResponse({ status: 200, type: Number })
+  async getAllUserWithdrawal(
+    @Param('userId') userId: string,
+  ): Promise<Withdrawal[]> {
+    return this.withdrawalsService.allUserWithdrawal(userId);
+  }
+  @Get('available/profit/:userId')
+  @Roles(UserRole.INVESTOR)
+  @UseGuards(RolesGuard)
+  @UseGuards(LocalAuthGuard)
+  @ApiResponse({ status: 200, type: Number })
+  async getWithdrawAvailableProfit(
+    @Param('userId') userId: string,
+  ): Promise<Withdrawal[]> {
+    return this.withdrawalsService.withdrawAvailableProfit(userId);
   }
 }
