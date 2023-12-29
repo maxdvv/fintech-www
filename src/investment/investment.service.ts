@@ -1,14 +1,18 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Investment } from "./schemas/investment.schema";
-import { User } from "../auth/schemas/user.schema";
-import { Model } from "mongoose";
-import { UserRole } from "../auth/role.enum";
-import { CreateInvestmentDto } from "./dto/create-investment.dto";
-import { Cron, CronExpression } from "@nestjs/schedule";
-import { InvitationCodes } from "../invitation-codes/schemas/invitation-codes.schema";
-import { CreateInvestmentResponseDto } from "./response/create-investment-response.dto";
-import { UserBonusResponseDto } from "./response/user-bonus-response.dto";
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Investment } from './schemas/investment.schema';
+import { User } from '../auth/schemas/user.schema';
+import { Model } from 'mongoose';
+import { UserRole } from '../auth/role.enum';
+import { CreateInvestmentDto } from './dto/create-investment.dto';
+import { InvitationCodes } from '../invitation-codes/schemas/invitation-codes.schema';
+import { CreateInvestmentResponseDto } from './response/create-investment-response.dto';
+import { UserBonusResponseDto } from './response/user-bonus-response.dto';
+import { Withdrawal } from '../withdrawals/schemas/withdrawals.schema';
 
 const INVESTOR_FUNDS_DAILY_COEFFICIENT = 0.01;
 const INVITER_BONUS_COEFFICIENT = 0.1;
@@ -19,7 +23,9 @@ export class InvestmentService {
   constructor(
     @InjectModel(Investment.name) private investmentModel: Model<Investment>,
     @InjectModel(User.name) private userModel: Model<User>,
-    @InjectModel(InvitationCodes.name) private invitationCodesModel: Model<InvitationCodes>
+    @InjectModel(InvitationCodes.name)
+    private invitationCodesModel: Model<InvitationCodes>,
+    @InjectModel(Withdrawal.name) private withdrawalModel: Model<Withdrawal>,
   ) {}
 
   // @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
@@ -90,25 +96,30 @@ export class InvestmentService {
   //   return invitedUsers;
   // }
 
-  async create(investment: CreateInvestmentDto): Promise<CreateInvestmentResponseDto> {
+  async create(
+    investment: CreateInvestmentDto,
+  ): Promise<CreateInvestmentResponseDto> {
     const { userId, deposit } = investment;
     const updatedUserRole = await this.userModel.findOneAndUpdate(
-      { _id: investment.userId, role: { $in: [UserRole.USER, UserRole.INVESTOR] } },
+      {
+        _id: investment.userId,
+        role: { $in: [UserRole.USER, UserRole.INVESTOR] },
+      },
       { $set: { ['role']: UserRole.INVESTOR } },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedUserRole) {
       console.error('Update error');
     }
 
-    const data: Investment =  await this.investmentModel.create({
+    const data: Investment = await this.investmentModel.create({
       userId,
       deposit,
       profit: 0,
       bonus: 0,
       availableProfit: 0,
-      availableBonus: 0
+      availableBonus: 0,
     });
 
     if (!data) {
@@ -117,15 +128,15 @@ export class InvestmentService {
 
     return {
       status: 'SUCCESS',
-      data
-    }
+      data,
+    };
   }
 
   async updateAvailableProfitById(id: string, value: number): Promise<any> {
     const updatedAvailableProfit = await this.investmentModel.findOneAndUpdate(
       { _id: id },
       { $set: { ['availableProfit']: value } },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedAvailableProfit) {
@@ -139,7 +150,7 @@ export class InvestmentService {
     const updatedAvailableBonus = await this.investmentModel.findOneAndUpdate(
       { _id: id },
       { $set: { ['availableBonus']: value } },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedAvailableBonus) {
@@ -162,7 +173,9 @@ export class InvestmentService {
   async findAllInvestmentByUserId(userId: string): Promise<Investment[]> {
     await this.calculateProfitByUserId(userId);
 
-    const investment: Investment[] = await this.investmentModel.find({ userId });
+    const investment: Investment[] = await this.investmentModel.find({
+      userId,
+    });
 
     return investment?.length ? investment : [];
   }
@@ -171,16 +184,40 @@ export class InvestmentService {
     const investments = await this.investmentModel.find({ userId });
 
     for (const investment of investments) {
-      const depositMilliseconds = new Date().getTime() - new Date(investment.createdAt).getTime();
-      const depositDays = Math.round(depositMilliseconds / MILLISECONDS_IN_ONE_DAY);
-      const profit =  Math.floor((investment.deposit * depositDays * INVESTOR_FUNDS_DAILY_COEFFICIENT) * 100) / 100;
-      const availableProfit = profit;
-      await this.investmentModel.findByIdAndUpdate(investment._id,{ profit, availableProfit });
+      const depositMilliseconds =
+        new Date().getTime() - new Date(investment.createdAt).getTime();
+      const depositDays = Math.round(
+        depositMilliseconds / MILLISECONDS_IN_ONE_DAY,
+      );
+      const profit =
+        Math.floor(
+          investment.deposit *
+            depositDays *
+            INVESTOR_FUNDS_DAILY_COEFFICIENT *
+            100,
+        ) / 100;
+      const investmentId = investment._id.toString();
+      const userWithdrawProfit = await this.withdrawalModel.find({
+        investmentId,
+      });
+      const withdrawProfit = userWithdrawProfit.reduce(
+        (acc, item) => (acc += item.sum),
+        0,
+      );
+      const availableProfit = profit - withdrawProfit;
+      await this.investmentModel.findByIdAndUpdate(investment._id, {
+        profit,
+        availableProfit,
+      });
     }
   }
 
-  async calculateBonusByUserId(userId: string): Promise<UserBonusResponseDto[]> {
-    const invitation: InvitationCodes = await this.invitationCodesModel.findOne({ userId });
+  async calculateBonusByUserId(
+    userId: string,
+  ): Promise<UserBonusResponseDto[]> {
+    const invitation: InvitationCodes = await this.invitationCodesModel.findOne(
+      { userId },
+    );
 
     if (!invitation) {
       return [];
@@ -199,8 +236,8 @@ export class InvestmentService {
             $push: {
               userId: '$_id',
               userName: '$username',
-              email: '$email'
-            }
+              email: '$email',
+            },
           },
         },
       },
@@ -209,8 +246,8 @@ export class InvestmentService {
           from: 'invitationcodes',
           localField: '_id',
           foreignField: 'investorInvitationCode',
-          as: 'inviter'
-        }
+          as: 'inviter',
+        },
       },
     ]);
 
@@ -218,27 +255,32 @@ export class InvestmentService {
       return [];
     }
 
-    const invitedUserIds: string[] = invitedUsers[0].invitedUsers.map(item => item.userId.toString());
+    const invitedUserIds: string[] = invitedUsers[0].invitedUsers.map((item) =>
+      item.userId.toString(),
+    );
 
-    const profitGroupByUser: { _id: string; totalProfit: number }[] = await this.investmentModel.aggregate([
-      {
-        $match: {
-          userId: { $in: invitedUserIds },
+    const profitGroupByUser: { _id: string; totalProfit: number }[] =
+      await this.investmentModel.aggregate([
+        {
+          $match: {
+            userId: { $in: invitedUserIds },
+          },
         },
-      },
-      {
-        $group: {
-          _id: '$userId',
-          totalProfit: { $sum: '$profit' },
+        {
+          $group: {
+            _id: '$userId',
+            totalProfit: { $sum: '$profit' },
+          },
         },
-      },
-    ]);
+      ]);
 
-    const usersBonus = invitedUsers[0].invitedUsers.map(user => {
+    const usersBonus = invitedUsers[0].invitedUsers.map((user) => {
       user.bonus = 0;
-      profitGroupByUser.forEach(profit => {
+      profitGroupByUser.forEach((profit) => {
         if (user.userId.toString() === profit._id) {
-          user.bonus = Math.floor((profit.totalProfit * INVITER_BONUS_COEFFICIENT) * 100) / 100;
+          user.bonus =
+            Math.floor(profit.totalProfit * INVITER_BONUS_COEFFICIENT * 100) /
+            100;
         }
       });
 
@@ -249,19 +291,23 @@ export class InvestmentService {
   }
 
   async findSumAllInvestment(): Promise<number> {
-    const investmentSumAggregationRes = await this.investmentModel.aggregate([
-      {
-        $group: {
-          _id: null,
-          total: { $sum: '$deposit' },
+    const investmentSumAggregationRes = await this.investmentModel
+      .aggregate([
+        {
+          $group: {
+            _id: null,
+            total: { $sum: '$deposit' },
+          },
         },
-      },
-    ]).exec();
+      ])
+      .exec();
 
-    return investmentSumAggregationRes.length > 0 ? investmentSumAggregationRes[0].total : 0;
+    return investmentSumAggregationRes.length > 0
+      ? investmentSumAggregationRes[0].total
+      : 0;
   }
 
   async findAll(): Promise<Investment[]> {
-    return (await this.investmentModel.find());
+    return await this.investmentModel.find();
   }
 }
